@@ -294,6 +294,8 @@ header h1 {
 
 .progress-ring {
     transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
 }
 
 .progress-ring-bg {
@@ -694,52 +696,233 @@ header h1 {
     background: var(--accent-hover);
 }
 
-/* 반응형 */
-@media (max-width: 480px) {
+/* 반응형 - 태블릿 */
+@media (max-width: 768px) {
     .container {
         padding: 15px;
     }
 
+    .settings-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+/* 반응형 - 모바일 */
+@media (max-width: 480px) {
+    .container {
+        padding: 12px;
+    }
+
+    header {
+        margin-bottom: 20px;
+    }
+
     header h1 {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
 
+    .theme-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+    }
+
+    /* 타이머 섹션 */
+    .timer-section {
+        padding: 20px 15px;
+        border-radius: 16px;
+    }
+
+    /* 페이즈 인디케이터 */
+    .phase-indicator {
+        margin-bottom: 15px;
+    }
+
+    .phase-label {
+        font-size: 1rem;
+        padding: 6px 14px;
+    }
+
+    .set-label {
+        font-size: 0.85rem;
+    }
+
+    /* 타이머 원형 */
     .time-circle {
-        width: 240px;
-        height: 240px;
+        width: 220px;
+        height: 220px;
     }
 
-    .progress-ring {
-        width: 240px;
-        height: 240px;
-    }
-
-    .progress-ring-bg,
-    .progress-ring-circle {
-        cx: 120;
-        cy: 120;
-        r: 110;
+    .timer-display {
+        margin-bottom: 20px;
     }
 
     #timeDisplay {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
     }
 
+    #timeDisplay.countdown-mode {
+        font-size: 4.5rem;
+    }
+
+    .preset-label {
+        font-size: 0.9rem;
+    }
+
+    /* 타이머 컨트롤 */
     .timer-controls {
-        gap: 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     .control-btn {
-        padding: 12px 18px;
-        min-width: 75px;
+        padding: 10px 16px;
+        min-width: 70px;
+        border-radius: 10px;
     }
 
     .control-btn .btn-icon {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .control-btn span:last-child {
+        font-size: 0.75rem;
+    }
+
+    /* 세트 게이지 */
+    .set-progress {
+        margin-top: 20px;
+        padding-top: 15px;
+    }
+
+    .set-progress-label {
         font-size: 0.8rem;
+        margin-bottom: 10px;
+    }
+
+    .set-dots {
+        gap: 5px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .set-dot {
+        width: 24px;
+        height: 24px;
+    }
+
+    .set-dot::after {
+        font-size: 0.6rem;
+    }
+
+    /* 설정 섹션 */
+    .settings-section {
+        padding: 20px 15px;
+        border-radius: 16px;
+    }
+
+    .settings-section h2 {
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .setting-item label {
+        font-size: 0.75rem;
+    }
+
+    .setting-item input {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+
+    .apply-btn {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* 로그 섹션 */
+    .log-section {
+        padding: 20px 15px;
+        border-radius: 16px;
+    }
+
+    .log-section h2 {
+        font-size: 1.1rem;
+    }
+
+    .log-item {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .log-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .log-preset {
+        align-self: flex-start;
+    }
+
+    .log-actions {
+        flex-wrap: wrap;
+    }
+
+    .log-actions button {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+
+    /* 모달 */
+    .modal-content {
+        padding: 20px;
+        width: 95%;
+        border-radius: 12px;
+    }
+
+    .modal-content h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* 아주 작은 화면 */
+@media (max-width: 360px) {
+    .time-circle {
+        width: 180px;
+        height: 180px;
+    }
+
+    #timeDisplay {
+        font-size: 2rem;
+    }
+
+    #timeDisplay.countdown-mode {
+        font-size: 3.5rem;
+    }
+
+    .set-dot {
+        width: 20px;
+        height: 20px;
+    }
+
+    .set-dot::after {
+        font-size: 0.55rem;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .control-btn {
+        min-width: 60px;
+        padding: 8px 12px;
     }
 }
 
