@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공부 타이머</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>공부 타이머</h1>
+            <button id="themeToggle" class="theme-btn" title="다크/라이트 모드 전환">🌙</button>
+        </header>
+
+        <!-- 타이머 섹션 -->
+        <section class="timer-section">
+            <div class="timer-display">
+                <div class="time-circle">
+                    <svg class="progress-ring" width="280" height="280">
+                        <circle class="progress-ring-bg" cx="140" cy="140" r="130"/>
+                        <circle class="progress-ring-circle" cx="140" cy="140" r="130"/>
+                    </svg>
+                    <div class="time-text">
+                        <span id="timeDisplay">25:00</span>
+                        <span id="presetLabel" class="preset-label">뽀모도로</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timer-controls">
+                <button id="startBtn" class="control-btn start">
+                    <span class="btn-icon">▶</span>
+                    <span>시작</span>
+                </button>
+                <button id="pauseBtn" class="control-btn pause" disabled>
+                    <span class="btn-icon">⏸</span>
+                    <span>일시정지</span>
+                </button>
+                <button id="resetBtn" class="control-btn reset">
+                    <span class="btn-icon">↺</span>
+                    <span>리셋</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 프리셋 섹션 -->
+        <section class="preset-section">
+            <h2>프리셋 타이머</h2>
+            <div class="preset-list" id="presetList">
+                <!-- 프리셋 버튼들이 JS로 생성됨 -->
+            </div>
+            <button id="addPresetBtn" class="add-preset-btn">+ 프리셋 추가</button>
+        </section>
+
+        <!-- 프리셋 추가 모달 -->
+        <div id="presetModal" class="modal">
+            <div class="modal-content">
+                <h3>새 프리셋 추가</h3>
+                <div class="form-group">
+                    <label for="presetName">이름</label>
+                    <input type="text" id="presetName" placeholder="예: 독서 시간">
+                </div>
+                <div class="form-group">
+                    <label for="presetMinutes">시간 (분)</label>
+                    <input type="number" id="presetMinutes" min="1" max="180" placeholder="30">
+                </div>
+                <div class="modal-buttons">
+                    <button id="cancelPreset" class="modal-btn cancel">취소</button>
+                    <button id="savePreset" class="modal-btn save">저장</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 로그 섹션 -->
+        <section class="log-section">
+            <h2>공부 로그</h2>
+            <div class="log-list" id="logList">
+                <!-- 로그 항목들이 JS로 생성됨 -->
+            </div>
+            <p id="emptyLog" class="empty-message">아직 완료된 공부 기록이 없습니다.</p>
+        </section>
+
+        <!-- 코멘트 모달 -->
+        <div id="commentModal" class="modal">
+            <div class="modal-content">
+                <h3>코멘트 추가/수정</h3>
+                <div class="form-group">
+                    <label for="commentText">코멘트</label>
+                    <textarea id="commentText" rows="3" placeholder="공부 내용을 기록하세요..."></textarea>
+                </div>
+                <input type="hidden" id="commentLogId">
+                <div class="modal-buttons">
+                    <button id="cancelComment" class="modal-btn cancel">취소</button>
+                    <button id="saveComment" class="modal-btn save">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림음 -->
+    <audio id="alarmSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleVcgAHO8498eABEeX6jc6pt3WiQAYKzs8Z5hPgsAdrn0/ZpJFQBjs/r+nD0MAHu9+gCWMg0Ahsf+B5MkDACQ0wYWkBcRAJneCymMDA0Ao+kUOoYDBQCt8yRLgPr/ALf8M1x69wC/AUJsfPUCxAdQfHzzBssOXox27wXPFGqZcesDzxhunWnqAdAYcqBk5//QF3ejYOT80BJ6pVzh+cwMfKdY3fXIBnupVNnwxP9+rFDV68D5gK5M0ea99IKwScziuO+EsUXI3rPphLNCw9mt5ISzP7/TqN+EtTu70aPbhLc4t8ud1oO5M7PFmNGCuy6vv5PMgb0pqrmNx3+/I6WsgsJ9wR2gn3m8e8MXm5Jxt3jFEZWEaLJ1xxCPdl6sdMkOiWdTp3TLDINXSKJzzQ1+Rz2dc88MeTc0l3PRC3MnK5Jz0wptFyKNc9UJaAcXiHPXB2T4EIN03Adi6gyAdeIDXNoKfXbnA1bKC3p36wNPuQ14eO8DRqgPdXnzAz2WEnN5+AM0hBVxeP0DKnIZb3gBBC1gHW14BQQnTiJreAkEIjwnaniNBB0qLGd4kgQYGDFkeJcEExU2YXicBA4SQV54oQMKD0xbd6YDBQxXWHerAwEJYlV3sAL+BW5Sd7UC+gJ6T3e6AvYAhkx3vwLy/ZJJeMQC7vqeSXjJAur3qkl4zwLl9bZJeNQC4PLCSXjaAt3v0El43wLZ7d5JeOQC1OrsSnjoAM/o+kp47gDK5glLeO0Axd4ZS3jtAL/WKUt46gC5zTlLeOcAs8VJS3jiAKy8WUt43gCms2lLd9gAnqp5S3fSAJagiUt3ywCOl5lLd8QAhY2pS3e8AHqDuEt3tABueShMd6sAYm9YTHehAFZliEx3lwBKW7hMd4wAPVHoTHeBgDJHGE13dQAnPUhNd2qAHDN4TXdeABApqE13UgAFH9hNdUYA+hQITnU6AO8KOE51LgDkAGhOdSIA2faaT3UWAc7szE91CgHD4v5PdP4Auf02UHQEAZ7zblB0DgGTD55QdBoBlgvXUHQmAZsH/1B0LgGdAgdRdC4BnP0CUXA==" type="audio/wav">
+    </audio>
+
+    <script src="app.js"></script>
+</body>
+</html>
