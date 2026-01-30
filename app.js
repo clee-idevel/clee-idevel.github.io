@@ -1,15 +1,26 @@
-// ==================== 상수 및 기본값 ====================
+// ==================== 상수 및 설정 ====================
 const STORAGE_KEYS = {
-    PRESETS: 'studyTimer_presets',
     LOGS: 'studyTimer_logs',
-    THEME: 'studyTimer_theme'
+    THEME: 'studyTimer_theme',
+    CONFIG: 'studyTimer_config'
 };
 
-const DEFAULT_PRESETS = [
-    { id: 'default_1', name: '뽀모도로', minutes: 25, isDefault: true },
-    { id: 'default_2', name: '집중', minutes: 50, isDefault: true },
-    { id: 'default_3', name: '딥워크', minutes: 90, isDefault: true }
-];
+// 기본 설정
+const DEFAULT_CONFIG = {
+    READY_SECONDS: 5,
+    STUDY_SECONDS: 50 * 60,     // 50분
+    REST_SECONDS: 10 * 60,      // 10분
+    TOTAL_SETS: 10
+};
+
+// 페이즈 상태
+const PHASE = {
+    IDLE: 'idle',
+    READY: 'ready',
+    STUDY: 'study',
+    REST: 'rest',
+    COMPLETE: 'complete'
+};
 
 // ==================== 유틸리티 함수 ====================
 function generateId() {
@@ -20,6 +31,10 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatCountdown(seconds) {
+    return seconds.toString();
 }
 
 function formatDateTime(isoString) {
@@ -39,7 +54,11 @@ function formatDuration(seconds) {
         const remainMins = mins % 60;
         return `${hours}시간 ${remainMins}분`;
     }
-    return `${mins}분`;
+    if (mins > 0) {
+        const secs = seconds % 60;
+        return secs > 0 ? `${mins}분 ${secs}초` : `${mins}분`;
+    }
+    return `${seconds}초`;
 }
 
 // ==================== 스토리지 관리 ====================
@@ -63,70 +82,60 @@ const Storage = {
     }
 };
 
-// ==================== 프리셋 관리 ====================
-const PresetManager = {
-    presets: [],
+// ==================== 설정 관리 ====================
+const ConfigManager = {
+    config: { ...DEFAULT_CONFIG },
 
     init() {
-        this.presets = Storage.get(STORAGE_KEYS.PRESETS, DEFAULT_PRESETS);
-        this.render();
+        const saved = Storage.get(STORAGE_KEYS.CONFIG, null);
+        if (saved) {
+            this.config = { ...DEFAULT_CONFIG, ...saved };
+        }
+        this.updateUI();
+        this.bindEvents();
     },
 
-    getAll() {
-        return this.presets;
+    updateUI() {
+        const studyMins = Math.floor(this.config.STUDY_SECONDS / 60);
+        const studySecs = this.config.STUDY_SECONDS % 60;
+        const restMins = Math.floor(this.config.REST_SECONDS / 60);
+        const restSecs = this.config.REST_SECONDS % 60;
+
+        document.getElementById('studyMinutes').value = studyMins;
+        document.getElementById('studySeconds').value = studySecs;
+        document.getElementById('restMinutes').value = restMins;
+        document.getElementById('restSeconds').value = restSecs;
+        document.getElementById('readySeconds').value = this.config.READY_SECONDS;
+        document.getElementById('totalSets').value = this.config.TOTAL_SETS;
     },
 
-    add(name, minutes) {
-        const preset = {
-            id: generateId(),
-            name: name.trim(),
-            minutes: parseInt(minutes),
-            isDefault: false
-        };
-        this.presets.push(preset);
-        this.save();
-        this.render();
-        return preset;
+    apply() {
+        const studyMins = parseInt(document.getElementById('studyMinutes').value) || 0;
+        const studySecs = parseInt(document.getElementById('studySeconds').value) || 0;
+        const restMins = parseInt(document.getElementById('restMinutes').value) || 0;
+        const restSecs = parseInt(document.getElementById('restSeconds').value) || 0;
+        const readySecs = parseInt(document.getElementById('readySeconds').value) || 5;
+        const totalSets = parseInt(document.getElementById('totalSets').value) || 10;
+
+        this.config.STUDY_SECONDS = studyMins * 60 + studySecs;
+        this.config.REST_SECONDS = restMins * 60 + restSecs;
+        this.config.READY_SECONDS = Math.max(1, readySecs);
+        this.config.TOTAL_SETS = Math.max(1, totalSets);
+
+        Storage.set(STORAGE_KEYS.CONFIG, this.config);
+        Timer.reset();
+        Timer.regenerateSetDots();
+        alert('설정이 적용되었습니다.');
     },
 
-    remove(id) {
-        const preset = this.presets.find(p => p.id === id);
-        if (preset && preset.isDefault) return false;
-
-        this.presets = this.presets.filter(p => p.id !== id);
-        this.save();
-        this.render();
-        return true;
-    },
-
-    save() {
-        Storage.set(STORAGE_KEYS.PRESETS, this.presets);
-    },
-
-    render() {
-        const container = document.getElementById('presetList');
-        container.innerHTML = '';
-
-        this.presets.forEach(preset => {
-            const btn = document.createElement('button');
-            btn.className = `preset-btn ${preset.isDefault ? 'default' : ''} ${Timer.currentPreset?.id === preset.id ? 'active' : ''}`;
-            btn.innerHTML = `
-                <span>${preset.name} (${preset.minutes}분)</span>
-                <span class="delete-preset" data-id="${preset.id}" title="삭제">×</span>
-            `;
-
-            btn.addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-preset')) {
-                    e.stopPropagation();
-                    if (confirm(`"${preset.name}" 프리셋을 삭제하시겠습니까?`)) {
-                        this.remove(preset.id);
-                    }
-                } else {
-                    Timer.setPreset(preset);
+    bindEvents() {
+        document.getElementById('applySettings').addEventListener('click', () => {
+            if (Timer.isRunning || Timer.currentPhase !== PHASE.IDLE) {
+                if (!confirm('타이머가 진행 중입니다. 설정을 적용하면 리셋됩니다. 계속하시겠습니까?')) {
+                    return;
                 }
-            });
-
-            container.appendChild(btn);
+            }
+            this.apply();
         });
     }
 };
@@ -140,13 +149,13 @@ const LogManager = {
         this.render();
     },
 
-    add(startTime, endTime, duration, presetName) {
+    add(startTime, endTime, duration, setNumber) {
         const log = {
             id: generateId(),
             startTime,
             endTime,
             duration,
-            presetName,
+            setNumber,
             comment: ''
         };
         this.logs.unshift(log);
@@ -198,15 +207,15 @@ const LogManager = {
                             <span class="log-duration">${formatDuration(log.duration)}</span> 완료
                         </div>
                     </div>
-                    <span class="log-preset">${log.presetName}</span>
+                    <span class="log-preset">${log.setNumber}세트</span>
                 </div>
                 ${log.comment ? `<div class="log-comment">${log.comment}</div>` : ''}
                 <div class="log-actions">
                     <button class="comment-btn" data-id="${log.id}">
-                        ${log.comment ? '✏️ 수정' : '💬 코멘트'}
+                        ${log.comment ? '수정' : '코멘트'}
                     </button>
                     <button class="delete-log" data-id="${log.id}">
-                        🗑️ 삭제
+                        삭제
                     </button>
                 </div>
             `;
@@ -231,52 +240,74 @@ const LogManager = {
 
 // ==================== 타이머 ====================
 const Timer = {
-    totalSeconds: 25 * 60,
-    remainingSeconds: 25 * 60,
+    currentPhase: PHASE.IDLE,
+    currentSet: 1,
+    totalSeconds: 5,
+    remainingSeconds: 5,
     intervalId: null,
     isRunning: false,
-    startTime: null,
-    currentPreset: null,
+    phaseStartTime: null,
 
     init() {
-        this.setPreset(PresetManager.getAll()[0]);
-        this.updateDisplay();
+        this.reset();
         this.bindEvents();
+        this.updateDisplay();
+        this.updateSetGauge();
     },
 
-    setPreset(preset) {
-        if (this.isRunning) {
-            if (!confirm('타이머가 실행 중입니다. 프리셋을 변경하시겠습니까?')) {
-                return;
-            }
-            this.stop();
+    regenerateSetDots() {
+        const container = document.getElementById('setDots');
+        container.innerHTML = '';
+        for (let i = 1; i <= ConfigManager.config.TOTAL_SETS; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'set-dot';
+            dot.dataset.set = i;
+            container.appendChild(dot);
         }
+        this.updateSetGauge();
+    },
 
-        this.currentPreset = preset;
-        this.totalSeconds = preset.minutes * 60;
-        this.remainingSeconds = this.totalSeconds;
+    reset() {
+        this.stop();
+        this.currentPhase = PHASE.IDLE;
+        this.currentSet = 1;
+        this.totalSeconds = ConfigManager.config.READY_SECONDS;
+        this.remainingSeconds = ConfigManager.config.READY_SECONDS;
+        this.phaseStartTime = null;
         this.updateDisplay();
-        PresetManager.render();
+        this.updatePhaseUI();
+        this.updateSetGauge();
 
-        document.getElementById('presetLabel').textContent = preset.name;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('pauseBtn').disabled = true;
     },
 
     start() {
         if (this.isRunning) return;
 
+        // IDLE 상태에서 시작하면 READY 페이즈로 전환
+        if (this.currentPhase === PHASE.IDLE) {
+            this.currentPhase = PHASE.READY;
+            this.totalSeconds = ConfigManager.config.READY_SECONDS;
+            this.remainingSeconds = ConfigManager.config.READY_SECONDS;
+        }
+
         this.isRunning = true;
-        this.startTime = new Date().toISOString();
+        this.phaseStartTime = new Date().toISOString();
 
         document.getElementById('startBtn').disabled = true;
         document.getElementById('pauseBtn').disabled = false;
         document.querySelector('.timer-section').classList.add('running');
+
+        this.updatePhaseUI();
+        this.updateSetGauge();
 
         this.intervalId = setInterval(() => {
             this.remainingSeconds--;
             this.updateDisplay();
 
             if (this.remainingSeconds <= 0) {
-                this.complete();
+                this.completePhase();
             }
         }, 1000);
     },
@@ -294,19 +325,12 @@ const Timer = {
 
     stop() {
         this.pause();
-        this.remainingSeconds = this.totalSeconds;
-        this.startTime = null;
-        this.updateDisplay();
+        clearInterval(this.intervalId);
     },
 
-    complete() {
+    completePhase() {
         this.pause();
-
         const endTime = new Date().toISOString();
-        const duration = this.totalSeconds;
-
-        // 로그 저장
-        LogManager.add(this.startTime, endTime, duration, this.currentPreset.name);
 
         // 완료 애니메이션
         const timerSection = document.querySelector('.timer-section');
@@ -316,13 +340,57 @@ const Timer = {
         // 알림음 재생
         this.playAlarm();
 
-        // 알림
-        this.showNotification();
+        // 페이즈에 따른 처리
+        switch (this.currentPhase) {
+            case PHASE.READY:
+                // 준비 완료 → 공부 시작
+                this.currentPhase = PHASE.STUDY;
+                this.totalSeconds = ConfigManager.config.STUDY_SECONDS;
+                this.remainingSeconds = ConfigManager.config.STUDY_SECONDS;
+                this.updatePhaseUI();
+                this.updateDisplay();
+                // 자동으로 다음 페이즈 시작
+                setTimeout(() => this.start(), 500);
+                break;
 
-        // 리셋
-        this.remainingSeconds = this.totalSeconds;
-        this.startTime = null;
-        this.updateDisplay();
+            case PHASE.STUDY:
+                // 공부 완료 → 로그 저장 → 휴식 시작
+                LogManager.add(this.phaseStartTime, endTime, ConfigManager.config.STUDY_SECONDS, this.currentSet);
+                this.currentPhase = PHASE.REST;
+                this.totalSeconds = ConfigManager.config.REST_SECONDS;
+                this.remainingSeconds = ConfigManager.config.REST_SECONDS;
+                this.updatePhaseUI();
+                this.updateDisplay();
+                this.showNotification('공부 완료!', `${this.currentSet}세트 공부 완료! 휴식 시간입니다.`);
+                // 자동으로 휴식 시작
+                setTimeout(() => this.start(), 500);
+                break;
+
+            case PHASE.REST:
+                // 휴식 완료 → 다음 세트 또는 완료 (휴식은 로그에 안남김)
+                this.updateSetGauge();
+
+                if (this.currentSet >= ConfigManager.config.TOTAL_SETS) {
+                    // 모든 세트 완료
+                    this.currentPhase = PHASE.COMPLETE;
+                    this.updatePhaseUI();
+                    this.showNotification('모든 세트 완료!', `${ConfigManager.config.TOTAL_SETS}세트를 모두 완료했습니다! 수고하셨습니다!`);
+                    alert('모든 세트를 완료했습니다! 수고하셨습니다!');
+                    this.reset();
+                } else {
+                    // 다음 세트 준비
+                    this.currentSet++;
+                    this.currentPhase = PHASE.READY;
+                    this.totalSeconds = ConfigManager.config.READY_SECONDS;
+                    this.remainingSeconds = ConfigManager.config.READY_SECONDS;
+                    this.updatePhaseUI();
+                    this.updateDisplay();
+                    this.showNotification('휴식 완료!', `${this.currentSet}세트를 시작합니다.`);
+                    // 자동으로 다음 세트 준비 시작
+                    setTimeout(() => this.start(), 500);
+                }
+                break;
+        }
     },
 
     playAlarm() {
@@ -333,19 +401,23 @@ const Timer = {
         });
     },
 
-    showNotification() {
+    showNotification(title, body) {
         if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('공부 완료!', {
-                body: `${this.currentPreset.name} (${this.currentPreset.minutes}분) 완료!`,
-                icon: '📚'
-            });
+            new Notification(title, { body, icon: '📚' });
         }
-
-        alert(`${this.currentPreset.name} 완료! 수고하셨습니다. 🎉`);
     },
 
     updateDisplay() {
-        document.getElementById('timeDisplay').textContent = formatTime(this.remainingSeconds);
+        const timeDisplay = document.getElementById('timeDisplay');
+
+        // 준비 단계에서는 숫자만 표시
+        if (this.currentPhase === PHASE.READY || (this.currentPhase === PHASE.IDLE)) {
+            timeDisplay.textContent = formatCountdown(this.remainingSeconds);
+            timeDisplay.classList.add('countdown-mode');
+        } else {
+            timeDisplay.textContent = formatTime(this.remainingSeconds);
+            timeDisplay.classList.remove('countdown-mode');
+        }
 
         // Progress ring 업데이트
         const progress = this.remainingSeconds / this.totalSeconds;
@@ -357,13 +429,69 @@ const Timer = {
         circle.style.strokeDashoffset = offset;
     },
 
+    updatePhaseUI() {
+        const phaseLabel = document.getElementById('phaseLabel');
+        const presetLabel = document.getElementById('presetLabel');
+        const setLabel = document.getElementById('setLabel');
+        const circle = document.querySelector('.progress-ring-circle');
+
+        setLabel.textContent = `${this.currentSet} / ${ConfigManager.config.TOTAL_SETS} 세트`;
+
+        switch (this.currentPhase) {
+            case PHASE.IDLE:
+                phaseLabel.textContent = '대기';
+                phaseLabel.className = 'phase-label phase-idle';
+                presetLabel.textContent = '시작을 눌러주세요';
+                circle.style.stroke = 'var(--accent-color)';
+                break;
+            case PHASE.READY:
+                phaseLabel.textContent = '준비';
+                phaseLabel.className = 'phase-label phase-ready';
+                presetLabel.textContent = '곧 시작합니다...';
+                circle.style.stroke = 'var(--warning-color)';
+                break;
+            case PHASE.STUDY:
+                phaseLabel.textContent = '공부';
+                phaseLabel.className = 'phase-label phase-study';
+                presetLabel.textContent = '집중하세요!';
+                circle.style.stroke = 'var(--success-color)';
+                break;
+            case PHASE.REST:
+                phaseLabel.textContent = '휴식';
+                phaseLabel.className = 'phase-label phase-rest';
+                presetLabel.textContent = '잠시 쉬어가세요';
+                circle.style.stroke = 'var(--accent-color)';
+                break;
+            case PHASE.COMPLETE:
+                phaseLabel.textContent = '완료';
+                phaseLabel.className = 'phase-label phase-complete';
+                presetLabel.textContent = '수고하셨습니다!';
+                circle.style.stroke = 'var(--success-color)';
+                break;
+        }
+    },
+
+    updateSetGauge() {
+        const dots = document.querySelectorAll('.set-dot');
+        dots.forEach((dot, index) => {
+            const setNum = index + 1;
+            dot.classList.remove('completed', 'active');
+
+            if (setNum < this.currentSet) {
+                dot.classList.add('completed');
+            } else if (setNum === this.currentSet && this.currentPhase !== PHASE.IDLE) {
+                dot.classList.add('active');
+            }
+        });
+    },
+
     bindEvents() {
         document.getElementById('startBtn').addEventListener('click', () => this.start());
         document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if (this.isRunning || this.remainingSeconds < this.totalSeconds) {
-                if (confirm('타이머를 리셋하시겠습니까?')) {
-                    this.stop();
+            if (this.isRunning || this.currentPhase !== PHASE.IDLE) {
+                if (confirm('타이머를 리셋하시겠습니까? 현재 진행 상황이 초기화됩니다.')) {
+                    this.reset();
                 }
             }
         });
@@ -373,54 +501,7 @@ const Timer = {
 // ==================== 모달 관리 ====================
 const ModalManager = {
     init() {
-        this.bindPresetModal();
         this.bindCommentModal();
-    },
-
-    bindPresetModal() {
-        const modal = document.getElementById('presetModal');
-        const addBtn = document.getElementById('addPresetBtn');
-        const cancelBtn = document.getElementById('cancelPreset');
-        const saveBtn = document.getElementById('savePreset');
-        const nameInput = document.getElementById('presetName');
-        const minutesInput = document.getElementById('presetMinutes');
-
-        addBtn.addEventListener('click', () => {
-            nameInput.value = '';
-            minutesInput.value = '';
-            modal.classList.add('show');
-            nameInput.focus();
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            modal.classList.remove('show');
-        });
-
-        saveBtn.addEventListener('click', () => {
-            const name = nameInput.value.trim();
-            const minutes = parseInt(minutesInput.value);
-
-            if (!name) {
-                alert('이름을 입력해주세요.');
-                nameInput.focus();
-                return;
-            }
-
-            if (!minutes || minutes < 1 || minutes > 180) {
-                alert('1~180 사이의 시간을 입력해주세요.');
-                minutesInput.focus();
-                return;
-            }
-
-            PresetManager.add(name, minutes);
-            modal.classList.remove('show');
-        });
-
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('show');
-            }
-        });
     },
 
     bindCommentModal() {
@@ -490,9 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
         Notification.requestPermission();
     }
 
-    PresetManager.init();
+    ConfigManager.init();
     LogManager.init();
     Timer.init();
+    Timer.regenerateSetDots();
     ModalManager.init();
     ThemeManager.init();
 });

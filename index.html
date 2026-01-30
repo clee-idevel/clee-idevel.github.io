@@ -15,6 +15,10 @@
 
         <!-- 타이머 섹션 -->
         <section class="timer-section">
+            <div class="phase-indicator">
+                <span id="phaseLabel" class="phase-label">준비</span>
+                <span id="setLabel" class="set-label">1 / 10 세트</span>
+            </div>
             <div class="timer-display">
                 <div class="time-circle">
                     <svg class="progress-ring" width="280" height="280">
@@ -22,8 +26,8 @@
                         <circle class="progress-ring-circle" cx="140" cy="140" r="130"/>
                     </svg>
                     <div class="time-text">
-                        <span id="timeDisplay">25:00</span>
-                        <span id="presetLabel" class="preset-label">뽀모도로</span>
+                        <span id="timeDisplay">00:05</span>
+                        <span id="presetLabel" class="preset-label">시작을 눌러주세요</span>
                     </div>
                 </div>
             </div>
@@ -42,35 +46,58 @@
                     <span>리셋</span>
                 </button>
             </div>
-        </section>
 
-        <!-- 프리셋 섹션 -->
-        <section class="preset-section">
-            <h2>프리셋 타이머</h2>
-            <div class="preset-list" id="presetList">
-                <!-- 프리셋 버튼들이 JS로 생성됨 -->
-            </div>
-            <button id="addPresetBtn" class="add-preset-btn">+ 프리셋 추가</button>
-        </section>
-
-        <!-- 프리셋 추가 모달 -->
-        <div id="presetModal" class="modal">
-            <div class="modal-content">
-                <h3>새 프리셋 추가</h3>
-                <div class="form-group">
-                    <label for="presetName">이름</label>
-                    <input type="text" id="presetName" placeholder="예: 독서 시간">
-                </div>
-                <div class="form-group">
-                    <label for="presetMinutes">시간 (분)</label>
-                    <input type="number" id="presetMinutes" min="1" max="180" placeholder="30">
-                </div>
-                <div class="modal-buttons">
-                    <button id="cancelPreset" class="modal-btn cancel">취소</button>
-                    <button id="savePreset" class="modal-btn save">저장</button>
+            <!-- 세트 진행 게이지 -->
+            <div class="set-progress">
+                <div class="set-progress-label">세트 진행</div>
+                <div class="set-gauge">
+                    <div class="set-dots" id="setDots">
+                        <div class="set-dot" data-set="1"></div>
+                        <div class="set-dot" data-set="2"></div>
+                        <div class="set-dot" data-set="3"></div>
+                        <div class="set-dot" data-set="4"></div>
+                        <div class="set-dot" data-set="5"></div>
+                        <div class="set-dot" data-set="6"></div>
+                        <div class="set-dot" data-set="7"></div>
+                        <div class="set-dot" data-set="8"></div>
+                        <div class="set-dot" data-set="9"></div>
+                        <div class="set-dot" data-set="10"></div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- 설정 섹션 -->
+        <section class="settings-section">
+            <h2>시간 설정</h2>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label for="studyMinutes">공부 시간 (분)</label>
+                    <input type="number" id="studyMinutes" min="1" max="120" value="50">
+                </div>
+                <div class="setting-item">
+                    <label for="studySeconds">공부 시간 (초)</label>
+                    <input type="number" id="studySeconds" min="0" max="59" value="0">
+                </div>
+                <div class="setting-item">
+                    <label for="restMinutes">휴식 시간 (분)</label>
+                    <input type="number" id="restMinutes" min="0" max="60" value="10">
+                </div>
+                <div class="setting-item">
+                    <label for="restSeconds">휴식 시간 (초)</label>
+                    <input type="number" id="restSeconds" min="0" max="59" value="0">
+                </div>
+                <div class="setting-item">
+                    <label for="readySeconds">준비 시간 (초)</label>
+                    <input type="number" id="readySeconds" min="1" max="30" value="5">
+                </div>
+                <div class="setting-item">
+                    <label for="totalSets">총 세트 수</label>
+                    <input type="number" id="totalSets" min="1" max="20" value="10">
+                </div>
+            </div>
+            <button id="applySettings" class="apply-btn">설정 적용</button>
+        </section>
 
         <!-- 로그 섹션 -->
         <section class="log-section">

@@ -90,6 +90,196 @@ header h1 {
     box-shadow: var(--shadow);
 }
 
+/* 페이즈 인디케이터 */
+.phase-indicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.phase-label {
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 8px 20px;
+    border-radius: 25px;
+    text-transform: uppercase;
+}
+
+.phase-idle {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.phase-ready {
+    background: var(--warning-color);
+    color: white;
+    animation: pulse-bg 1s ease-in-out infinite;
+}
+
+.phase-study {
+    background: var(--success-color);
+    color: white;
+}
+
+.phase-rest {
+    background: var(--accent-color);
+    color: white;
+}
+
+.phase-complete {
+    background: var(--success-color);
+    color: white;
+}
+
+.set-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+@keyframes pulse-bg {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* 세트 진행 게이지 */
+.set-progress {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.set-progress-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.set-gauge {
+    display: flex;
+    justify-content: center;
+}
+
+.set-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.set-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.set-dot::after {
+    content: attr(data-set);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.set-dot.active {
+    background: var(--warning-color);
+    border-color: var(--warning-color);
+    transform: scale(1.15);
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+}
+
+.set-dot.active::after {
+    color: white;
+}
+
+.set-dot.completed {
+    background: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.set-dot.completed::after {
+    color: white;
+}
+
+/* 설정 섹션 */
+.settings-section {
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.settings-section h2 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.setting-item label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.setting-item input {
+    padding: 10px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.3s;
+}
+
+.setting-item input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.apply-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.apply-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+/* 카운트다운 모드 (큰 숫자) */
+#timeDisplay.countdown-mode {
+    font-size: 6rem;
+    font-weight: 800;
+}
+
 .timer-display {
     display: flex;
     justify-content: center;
